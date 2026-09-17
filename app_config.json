@@ -1,0 +1,7 @@
+{
+  "app_name": "Gerenciador de Armazenamento",
+  "expected_account": "",
+  "target_sender": "diligencia@mlradvogados.com",
+  "preview_limit": 500,
+  "delete_batch_size": 500
+}
