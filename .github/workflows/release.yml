@@ -45,7 +45,7 @@ jobs:
         shell: pwsh
         run: |
           $archive = "GerenciadorDeArmazenamento-${{ github.ref_name }}-windows.zip"
-          Compress-Archive -Path "dist\GerenciadorDeArmazenamento" -DestinationPath $archive
+          Compress-Archive -Path "dist\GerenciadorDeArmazenamento.exe" -DestinationPath $archive
 
       - name: Publicar GitHub Release
         shell: pwsh

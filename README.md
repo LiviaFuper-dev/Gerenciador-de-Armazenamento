@@ -63,7 +63,7 @@ python -m unittest discover -s tests -v
 .\build.ps1
 ```
 
-O resultado ficará em `dist\GerenciadorDeArmazenamento`. O arquivo `client_secret.json` deve ser colocado nessa pasta para o aplicativo conseguir abrir a autorização do Google.
+O resultado ficará em `dist\GerenciadorDeArmazenamento.exe`. Configuração, ícone e dependências ficam embutidos no executável. O arquivo `client_secret.json` deve ser colocado ao lado do `.exe` para o aplicativo conseguir abrir a autorização do Google.
 
 O `client_secret.json` não é copiado automaticamente para `dist`. Distribua-o separadamente e nunca o anexe a uma GitHub Release.
 
@@ -72,8 +72,8 @@ O `client_secret.json` não é copiado automaticamente para `dist`. Distribua-o 
 O workflow `.github/workflows/release.yml` testa e compila o aplicativo no Windows e cria uma GitHub Release com a pasta de distribuição em ZIP. A versão da tag deve ser igual a `storage_manager.__version__`.
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 Ao iniciar, o aplicativo consulta a última release publicada. Quando existe uma versão mais nova, ele mostra o botão **Baixar atualização**, que abre a página oficial da release. A instalação permanece manual enquanto o executável não possui assinatura digital.

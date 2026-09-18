@@ -8,7 +8,7 @@ from tkinter import messagebox, ttk
 
 from storage_manager import __version__
 from storage_manager.auth import authorize, disconnect
-from storage_manager.config import AppConfig, application_dir, load_config
+from storage_manager.config import AppConfig, load_config, resource_dir
 from storage_manager.errors import AppError, OperationCancelled, WrongAccountError
 from storage_manager.gmail_client import GmailClient
 from storage_manager.logging_setup import configure_logging
@@ -156,7 +156,7 @@ class StorageManagerApp:
 
         self.root.title(config.app_name)
         self._window_icon: tk.PhotoImage | None = None
-        icon_path = application_dir() / "assets" / "app_icon.png"
+        icon_path = resource_dir() / "assets" / "app_icon.png"
         try:
             self._window_icon = tk.PhotoImage(file=str(icon_path))
             self.root.iconphoto(True, self._window_icon)

@@ -1,9 +1,10 @@
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
-from storage_manager.config import load_config
+from storage_manager.config import load_config, resource_dir
 from storage_manager.errors import AppError
 
 
@@ -51,6 +52,12 @@ class ConfigTests(unittest.TestCase):
         )
         config = load_config(path)
         self.assertEqual(config.expected_account, "")
+
+    def test_uses_pyinstaller_temporary_directory_for_bundled_resources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch("storage_manager.config.sys.frozen", True, create=True):
+                with patch("storage_manager.config.sys._MEIPASS", directory, create=True):
+                    self.assertEqual(resource_dir(), Path(directory))
 
 
 if __name__ == "__main__":

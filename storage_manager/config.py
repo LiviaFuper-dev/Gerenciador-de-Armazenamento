@@ -18,6 +18,12 @@ def application_dir() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
+def resource_dir() -> Path:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
+    return application_dir()
+
+
 @dataclass(frozen=True)
 class AppConfig:
     app_name: str
@@ -32,7 +38,7 @@ class AppConfig:
 
 
 def load_config(path: Path | None = None) -> AppConfig:
-    config_path = path or application_dir() / "app_config.json"
+    config_path = path or resource_dir() / "app_config.json"
     try:
         raw = json.loads(config_path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
