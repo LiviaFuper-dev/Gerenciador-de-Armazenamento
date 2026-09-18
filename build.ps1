@@ -21,13 +21,9 @@ if (-not (Test-Path -LiteralPath ".venv")) {
     main.py
 
 Copy-Item -LiteralPath "app_config.json" -Destination "dist\GerenciadorDeArmazenamento\app_config.json" -Force
-if (Test-Path -LiteralPath "client_secret.json") {
-    Copy-Item -LiteralPath "client_secret.json" -Destination "dist\GerenciadorDeArmazenamento\client_secret.json" -Force
-} else {
-    Write-Warning "client_secret.json não encontrado; a autenticação Google não funcionará nesta compilação."
-}
 $distAssets = "dist\GerenciadorDeArmazenamento\assets"
 New-Item -ItemType Directory -Force -Path $distAssets | Out-Null
 Copy-Item -LiteralPath "assets\app_icon.png" -Destination $distAssets -Force
 Copy-Item -LiteralPath "assets\app_icon.ico" -Destination $distAssets -Force
 Write-Host "Executável criado em dist\GerenciadorDeArmazenamento\GerenciadorDeArmazenamento.exe"
+Write-Warning "Distribua client_secret.json separadamente e coloque-o ao lado do executável."

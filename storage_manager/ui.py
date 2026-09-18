@@ -3,14 +3,17 @@ from __future__ import annotations
 import queue
 import threading
 import tkinter as tk
+import webbrowser
 from tkinter import messagebox, ttk
 
+from storage_manager import __version__
 from storage_manager.auth import authorize, disconnect
 from storage_manager.config import AppConfig, application_dir, load_config
 from storage_manager.errors import AppError, OperationCancelled, WrongAccountError
 from storage_manager.gmail_client import GmailClient
 from storage_manager.logging_setup import configure_logging
 from storage_manager.models import DeleteResult, ScanResult, format_bytes
+from storage_manager.updates import UpdateInfo, check_for_update
 
 
 BG = "#f3f6fb"
@@ -165,6 +168,7 @@ class StorageManagerApp:
         self._configure_styles()
         self._build()
         self.root.after(100, self._drain_events)
+        threading.Thread(target=self._check_for_updates, daemon=True).start()
 
     def _configure_styles(self) -> None:
         style = ttk.Style(self.root)
@@ -199,7 +203,7 @@ class StorageManagerApp:
 
         tk.Label(
             outer,
-            text=self.config.app_name,
+            text=f"{self.config.app_name}  v{__version__}",
             background=BG,
             foreground=TEXT,
             font=("Segoe UI", 20, "bold"),
@@ -234,6 +238,23 @@ class StorageManagerApp:
             command=self._disconnect,
         )
         self.disconnect_button.pack(side="right", padx=(0, 8))
+
+        self.update_card = ttk.Frame(outer, style="Card.TFrame", padding=12)
+        self.update_var = tk.StringVar()
+        tk.Label(
+            self.update_card,
+            textvariable=self.update_var,
+            background=CARD,
+            foreground=GREEN,
+            font=("Segoe UI", 10, "bold"),
+        ).pack(side="left")
+        self.update_button = ClassicButton(
+            self.update_card,
+            text="Baixar atualização",
+            command=self._open_update,
+        )
+        self.update_button.pack(side="right")
+        self.update: UpdateInfo | None = None
 
         actions = ttk.Frame(outer)
         actions.pack(fill="x", pady=(0, 7))
@@ -317,6 +338,15 @@ class StorageManagerApp:
         self.analyze_button.configure(state="disabled" if busy or not self.gmail else "normal")
         if busy:
             self.delete_button.configure(state="disabled")
+
+    def _check_for_updates(self) -> None:
+        update = check_for_update(__version__)
+        if update:
+            self.events.put(("update", update))
+
+    def _open_update(self) -> None:
+        if self.update:
+            webbrowser.open(self.update.page_url)
 
     def _run_worker(self, function) -> None:
         self.cancel_event = threading.Event()
@@ -479,6 +509,10 @@ class StorageManagerApp:
                     self._show_delete_result(event[1])
                 elif kind == "error":
                     self._show_error(event[1])
+                elif kind == "update":
+                    self.update = event[1]
+                    self.update_var.set(f"Nova versão disponível: v{self.update.version}")
+                    self.update_card.pack(fill="x", pady=(0, 8), before=self.analyze_button.master)
                 elif kind == "idle":
                     self._set_busy(False)
                     self._update_delete_state()
