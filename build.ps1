@@ -13,7 +13,9 @@ if ($LASTEXITCODE -ne 0) { throw "Falha ao atualizar o pip." }
 if ($LASTEXITCODE -ne 0) { throw "Falha ao instalar as dependências." }
 & ".\.venv\Scripts\python.exe" -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) { throw "Os testes falharam; o executável não será gerado." }
+Remove-Item -LiteralPath "build\GerenciadorDeArmazenamento" -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath "dist\GerenciadorDeArmazenamento" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath "dist\GerenciadorDeArmazenamento.exe" -Force -ErrorAction SilentlyContinue
 & ".\.venv\Scripts\pyinstaller.exe" `
     --noconfirm `
     --clean `

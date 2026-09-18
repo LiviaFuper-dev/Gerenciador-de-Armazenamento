@@ -41,11 +41,13 @@ jobs:
         shell: pwsh
         run: .\build.ps1
 
-      - name: Criar pacote ZIP
+      - name: Instalar Inno Setup
         shell: pwsh
-        run: |
-          $archive = "GerenciadorDeArmazenamento-${{ github.ref_name }}-windows.zip"
-          Compress-Archive -Path "dist\GerenciadorDeArmazenamento.exe" -DestinationPath $archive
+        run: choco install innosetup -y --no-progress
+
+      - name: Criar instalador
+        shell: pwsh
+        run: .\build-installer.ps1
 
       - name: Publicar GitHub Release
         shell: pwsh
@@ -53,6 +55,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ github.ref_name }}" `
-            "GerenciadorDeArmazenamento-${{ github.ref_name }}-windows.zip" `
+            "dist\GerenciadorDeArmazenamento-${{ github.ref_name }}-windows-setup.exe" `
             --title "Gerenciador de Armazenamento ${{ github.ref_name }}" `
             --generate-notes
