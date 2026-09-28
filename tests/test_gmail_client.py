@@ -2,15 +2,21 @@ import logging
 import threading
 import unittest
 
+from googleapiclient.errors import HttpError
+from httplib2 import Response
+
 from storage_manager.gmail_client import GmailClient
 from storage_manager.models import ScanResult
 
 
 class FakeRequest:
-    def __init__(self, response):
+    def __init__(self, response, error=None):
         self.response = response
+        self.error = error
 
     def execute(self, num_retries=0):
+        if self.error:
+            raise self.error
         return self.response
 
 
@@ -31,6 +37,7 @@ class FakeMessages:
     def __init__(self):
         self.list_calls = []
         self.deleted_groups = []
+        self.fail_delete_sizes = set()
 
     def list(self, **kwargs):
         self.list_calls.append(kwargs)
@@ -59,7 +66,14 @@ class FakeMessages:
         )
 
     def batchDelete(self, **kwargs):
-        self.deleted_groups.append(list(kwargs["body"]["ids"]))
+        group = list(kwargs["body"]["ids"])
+        self.deleted_groups.append(group)
+        if len(group) in self.fail_delete_sizes:
+            error = HttpError(
+                Response({"status": "400", "reason": "Bad Request"}),
+                b'{"error":{"message":"Falha simulada"}}',
+            )
+            return FakeRequest({}, error=error)
         return FakeRequest({})
 
 
@@ -134,6 +148,39 @@ class GmailClientTests(unittest.TestCase):
         self.assertEqual([item for group in groups for item in group], ids)
         self.assertEqual(result.deleted, 1001)
         self.assertEqual(result.failed, 0)
+
+    def test_delete_divides_a_rejected_batch_and_continues(self):
+        client = make_client()
+        client.api.messages_resource.fail_delete_sizes.add(500)
+        ids = [f"m{index}" for index in range(500)]
+        scan = ScanResult(query="from:teste@example.com", message_ids=ids)
+
+        result = client.permanently_delete(
+            scan,
+            batch_size=500,
+            cancel=threading.Event(),
+            progress=lambda _current, _total, _text: None,
+        )
+
+        groups = client.api.messages_resource.deleted_groups
+        self.assertEqual([len(group) for group in groups], [500, 250, 250])
+        self.assertEqual(result.deleted, 500)
+        self.assertEqual(result.failed, 0)
+
+    def test_delete_counts_only_an_individually_rejected_message_as_failed(self):
+        client = make_client()
+        client.api.messages_resource.fail_delete_sizes.add(1)
+        scan = ScanResult(query="from:teste@example.com", message_ids=["m1"])
+
+        result = client.permanently_delete(
+            scan,
+            batch_size=100,
+            cancel=threading.Event(),
+            progress=lambda _current, _total, _text: None,
+        )
+
+        self.assertEqual(result.deleted, 0)
+        self.assertEqual(result.failed, 1)
 
 
 if __name__ == "__main__":

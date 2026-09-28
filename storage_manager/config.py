@@ -51,7 +51,7 @@ def load_config(path: Path | None = None) -> AppConfig:
         expected_account=str(raw.get("expected_account", "")).strip().casefold(),
         target_sender=str(raw.get("target_sender", "")).strip().casefold(),
         preview_limit=int(raw.get("preview_limit", 500)),
-        delete_batch_size=int(raw.get("delete_batch_size", 500)),
+        delete_batch_size=int(raw.get("delete_batch_size", 100)),
     )
     if config.expected_account and not EMAIL_PATTERN.fullmatch(config.expected_account):
         raise AppError("A conta esperada em app_config.json não é um e-mail válido.")

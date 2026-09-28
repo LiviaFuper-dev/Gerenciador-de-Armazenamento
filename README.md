@@ -78,8 +78,8 @@ O instalador interno inclui o `client_secret.json` e deve ser compartilhado apen
 O workflow `.github/workflows/release.yml` testa e compila o aplicativo no Windows e cria uma GitHub Release com um instalador. A versão da tag deve ser igual a `storage_manager.__version__`.
 
 ```powershell
-git tag v0.3.0
-git push origin v0.3.0
+git tag v0.3.1
+git push origin v0.3.1
 ```
 
 Ao iniciar, o aplicativo consulta a última release publicada. Quando existe uma versão mais nova, ele mostra o botão **Baixar atualização**, que abre a página oficial da release. A instalação permanece manual enquanto o executável não possui assinatura digital.

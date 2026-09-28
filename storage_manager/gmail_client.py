@@ -131,21 +131,39 @@ class GmailClient:
         # pois apagar resultados pode invalidar tokens de paginação.
         deleted = 0
         failed = 0
-        for group in chunks(scan.message_ids, batch_size):
-            if cancel.is_set():
-                break
+
+        def delete_group(group: list[str]) -> None:
+            nonlocal deleted, failed
+            if cancel.is_set() or not group:
+                return
             try:
                 (
                     self.api.users()
                     .messages()
                     .batchDelete(userId="me", body={"ids": group})
-                    .execute(num_retries=3)
+                    .execute(num_retries=5)
                 )
                 deleted += len(group)
             except HttpError as exc:
-                failed += len(group)
-                self.logger.error("Falha ao excluir lote de %d mensagens: %s", len(group), exc.reason)
+                status = getattr(exc.resp, "status", "desconhecido")
+                self.logger.error(
+                    "Falha ao excluir lote de %d mensagens (HTTP %s): %s",
+                    len(group),
+                    status,
+                    exc.reason,
+                )
+                if len(group) == 1:
+                    failed += 1
+                else:
+                    midpoint = len(group) // 2
+                    delete_group(group[:midpoint])
+                    delete_group(group[midpoint:])
             progress(deleted + failed, scan.count, "Excluindo permanentemente em lotes...")
+
+        for group in chunks(scan.message_ids, batch_size):
+            if cancel.is_set():
+                break
+            delete_group(group)
 
         self.logger.info(
             "Exclusão concluída: solicitadas=%d excluídas=%d falhas=%d",
