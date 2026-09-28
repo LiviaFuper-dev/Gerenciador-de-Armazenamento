@@ -15,13 +15,17 @@ RELEASE_URL_PREFIX = (
     "https://github.com/LiviaFuper-dev/"
     "Gerenciador-de-Armazenamento/releases/"
 )
+DOWNLOAD_URL_PREFIX = (
+    "https://github.com/LiviaFuper-dev/"
+    "Gerenciador-de-Armazenamento/releases/download/"
+)
 VERSION_PATTERN = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
 
 
 @dataclass(frozen=True)
 class UpdateInfo:
     version: str
-    page_url: str
+    download_url: str
 
 
 def version_tuple(value: str) -> tuple[int, int, int]:
@@ -38,7 +42,17 @@ def update_from_release(current_version: str, release: dict) -> UpdateInfo | Non
         return None
     if version_tuple(tag) <= version_tuple(current_version):
         return None
-    return UpdateInfo(version=tag.removeprefix("v"), page_url=page_url)
+    expected_asset = f"GerenciadorDeArmazenamento-{tag}-windows-setup.exe"
+    for asset in release.get("assets", []):
+        if str(asset.get("name", "")).strip() != expected_asset:
+            continue
+        download_url = str(asset.get("browser_download_url", "")).strip()
+        if download_url.startswith(DOWNLOAD_URL_PREFIX):
+            return UpdateInfo(
+                version=tag.removeprefix("v"),
+                download_url=download_url,
+            )
+    return None
 
 
 def check_for_update(current_version: str, timeout: float = 5.0) -> UpdateInfo | None:

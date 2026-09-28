@@ -250,7 +250,7 @@ class StorageManagerApp:
         ).pack(side="left")
         self.update_button = ClassicButton(
             self.update_card,
-            text="Baixar atualização",
+            text="Baixar instalador",
             command=self._open_update,
         )
         self.update_button.pack(side="right")
@@ -346,7 +346,7 @@ class StorageManagerApp:
 
     def _open_update(self) -> None:
         if self.update:
-            webbrowser.open(self.update.page_url)
+            webbrowser.open(self.update.download_url)
 
     def _run_worker(self, function) -> None:
         self.cancel_event = threading.Event()
